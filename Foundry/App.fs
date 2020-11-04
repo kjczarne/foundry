@@ -1,5 +1,6 @@
 namespace Foundry
 
+open Regex
 open Mold
 
 module App =
@@ -24,6 +25,13 @@ module App =
 
 ⚗️   
 """
-        Mold.carveMoldToRegex "⚗️" defaultMarkdownMold
+        Mold.carveMoldMelt "⚗️" defaultMarkdownMold
+        |> printfn "%A"
+
+        interpolateMarkers (regexMoldInterpolationMap "⚗️") defaultMarkdownMold
+        |> printfn "%A"
+
+        let k, v = Map.toSeq (regexMoldInterpolationMap "⚗️") |> Seq.item 0
+        replaceRegex k v defaultMarkdownMold
         |> printfn "%A"
         0

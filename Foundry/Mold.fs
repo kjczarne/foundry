@@ -1,6 +1,6 @@
 namespace Foundry
 
-open System.Text.RegularExpressions
+open Regex
 
 /// <summary>
 /// This module contains shared *mold* logic, i.e.
@@ -29,140 +29,104 @@ open System.Text.RegularExpressions
 module Mold =
 
     /// <summary>
-    /// A Mold for textual data.
-    /// 
-    /// <typeparam name="MagicMarker">The marker placed
-    /// in a text document to be detected by Foundry
-    /// as a paren-like delimiter of data to be parsed.
-    /// By convention, placed after the header text
-    /// and at the end of a parse block. This is used
-    /// to delimit what portion of the document will be
-    /// actually parsed instead of always expecting
-    /// a dedicated document. This way users can choose
-    /// to have data conversible by Foundry embedded in
-    /// any document of their choice.</typeparam>
-    /// <typeparam name="RegexWrapper">
-    /// A wrapper to transform a simple spec into a
-    /// Regex pattern. It declares a `@@repl@@` tag in
-    /// the place where substitution should occur to
-    /// derive a valid Regular Expression.
-    /// </typeparam>
-    /// <typeparam name="HeaderSpec">
-    /// A spec describing what a header of a batch should
-    /// look like. A logical counterpart of `Batch` `Id`
-    /// field.</typeparam>
-    /// <typeparam name="QuestionUnitSpec">
-    /// This Spec pattern is used to determine the
-    /// logical counterpart of a flashcard's front
-    /// face. It is used to determine arrays of Records
-    /// in a text document.</typeparam>
-    /// <typeparam name="AnswerUnitSpec">
-    /// This Spec pattern is used to parse answer
-    /// units which are expected to be consistently
-    /// identical for a given question unit.</typeparam>
-    type TextMold =
-        { MagicMarker : string
-          RegexWrapper : string
-          HeaderSpec : string * string
-          QuestionUnitSpec : string * string
-          AnswerUnitSpec : string * string }
-
-    type Mold =
-        | MarkdownMold of TextMold
-
-    let parseRegex regex str =
-        [for m in Regex(regex).Matches(str) do m.Value]
-
-    let replaceRegex regex (repl: string) str=
-        Regex.Replace(str, regex, repl)
-
-    let splitRegex regex str =
-        Regex.Split(str, regex) |> Array.toList
-
-    let makeRegex mold replTuple =
-        let head, trail = replTuple
-        mold.RegexWrapper.Replace("@@repl1@@", head).Replace("@@repl2@@", trail)
-
-
+    /// Default Markdown Mold consistent with
+    /// what Notion returns when using their
+    /// Toggle construct.
+    /// </summary>
     let defaultMarkdownMold = """
 # ${HEADER} ${MAGIC}
 
-$|R:- ${QUESTION}
-$|A:
-    ${ANSWER}|:A$
-|:R$
+${q}-${QUESTION}${q} 
+${a}
+    ${ANSWER}
+${a}
 ${MAGIC}
 """
 
+
     /// <summary>
-    /// This function should take in a *Mold* spec
-    /// and transform it into an intermediate representation
-    /// that can be used from within the Regex Parser.
+    /// Default Regex interpolation map for the
+    /// interpolable fields. Since the *Magic Marker*
+    /// is configurable, this is a function that takes
+    /// a *Magic Marker* as a parameter.
+    /// <param name="magicMarker">The configured *Magic Marker*
+    /// </param>
+    /// <returns>Map {Regex pattern to match interpolated field
+    /// : Regex pattern to be placed in the interpolated field}
+    /// </returns>
+    /// </summary>
+    let regexMoldInterpolationMap magicMarker =
+        Map( seq { @"\$\{MAGIC\}", magicMarker
+                   @"\$\{HEADER\}", @"(.+)"
+                   @"\$\{QUESTION\}", @"(.+)"
+                   @"\$\{ANSWER\}", @"(.+)" } )
+
+
+    /// <summary>
+    /// Recursively interpolates markers with values
+    /// taken from an interpolation map. This can be used to
+    /// interpolate regex patterns for parsing or actual
+    /// values for pouring into a file
+    /// <param name="markerMap">Map {Regex pattern : 
+    /// Value to interpolate}</param>
+    /// <param name="str">Template string with fields
+    /// to interpolate</param>
     /// 
-    /// The *Mold* spec should be a string that obeys the 
-    /// following rules:
-    /// * It contains `${HEADER}`, `${MAGIC}`, `${QUESTION}`,
-    ///   `${ANSWER}` interpolation tags for the title,
-    ///   *Magic Marker*, question field and answer field spec.
-    /// * It describes the array of Records and array of Answer
-    ///   fields in the following manner:
-    ///     * Record array is denoted by `$|R:` and `|:R$` tags.
-    ///     * Answer array is denoted by `$|A:` and `|:A$` tags.
-    /// 
+    /// The implementation might seem convoluted but is
+    /// actually fairly simple:
+    /// 1. Unpack the first element of a Key, Value pair
+    ///    *if it exists* into `k` and `v` variables. If
+    ///    it doesn't exist just return empty strings.
+    /// 2. Use the `k` to match a template marker and
+    ///    use the `v` to inject into the `str`.
+    /// 3. Match on the count of elements in the map,
+    ///    if the map has no more elements, return `repl`.
+    ///    If it still has elements, call the 
+    ///    `interpolateMarkers` function again with the
+    ///    same map but with `k` element removed and with
+    ///    `repl` instead of the original string to keep
+    ///    interpolating within the *already interpolated*
+    ///    string.
+    /// </summary>
+    let rec interpolateMarkers (markerMap: Map<string, string>) str =
+        let s = Map.toSeq markerMap
+        let k, v = 
+            match Seq.tryHead s with
+            | None -> "", ""
+            | Some s -> s
+        let repl = replaceRegex k v str
+        match markerMap.Count with
+        | 0 -> repl
+        | _ -> interpolateMarkers (Map.remove k markerMap) repl
+
+
+    /// <summary>
     /// Example, default Markdown spec:
     /// ```fsharp
     /// """
     /// # ${HEADER} ${MAGIC}
     /// 
-    /// $|R:- ${QUESTION}
-    /// $|A:
-    ///     ${ANSWER}|:A$
-    /// |:R$
+    /// ${q}-${QUESTION}${q} 
+    /// ${a}
+    ///     ${ANSWER}
+    /// ${a}
     /// ${MAGIC}
     /// """
     /// ```
-    /// 
     /// The pipeline acts as follows:
-    /// 1. The *Magic Marker* is interpolated in the Mold.
-    /// 2. The Header, Question and Answer placeholders are
-    ///    interpolated with ".+" pattern
-    /// 3. Split the input on the *Magic Marker* -> this results
-    ///    in a 3-part list: 
-    ///    `[pre-header and header pattern; records; post-magic]`
-    /// 4. Split each field in that list on the array tokens ->
-    ///    this results in the following output list of Regex
-    ///    patterns:
-    ///    ```fsharp
-    ///    [ [ "pre-header and header" ]
-    ///      [ "between magic and record"
-    ///        "question"
-    ///        "between question and answer list" 
-    ///        "answer"
-    ///        "between answer and end of record list"
-    ///        "between record list and magic" ]
-    ///      [ "post-magic" ] ]
-    ///    ```
-    ///    Notice that the middle list is representative of a
-    ///    `Record` structure in the file and that the first
-    ///    element in the list matches the header of the file.
-    /// <param name="mold">`string` mold</param>
-    /// </summary>
-    let carveMoldToRegex magicMarker mold =
-        replaceRegex @"\$\{MAGIC\}" magicMarker mold
-        |> replaceRegex @"\$\{HEADER\}" @"(.+)"
-        |> replaceRegex @"\$\{QUESTION\}" @"(.+)"
-        |> replaceRegex @"\$\{ANSWER\}" @"(.+)"
-        |> splitRegex magicMarker
-        |> List.map (splitRegex @"\$\|R\:|\$\|A\:|\|\:A\$|\|\:R\$")
-
-    // /// <summary>
-    // /// The default Mold for Markdown documents.
-    // /// Consistent with the way `toggle`s are dumped
-    // /// by Notion into Markdown.
-    // /// </summary>
-    // let defaultMarkdownMold =
-    //     { MagicMarker = @"⚗️"
-    //       RegexWrapper = @"(?<=@@repl1@@)\w+.*(?<!@@repl2@@)"
-    //       HeaderSpec = @"# ", @"\n\n"
-    //       QuestionUnitSpec = @"- ", @"\n\n"
-    //       AnswerUnitSpec = @"    ", @"\n\n" }
+    /// 1. The first pattern to be returned is a pattern
+    ///    that matches a complete batch, i.e.
+    ///    `${HEADER}${MAGIC}[\s\S]+${MAGIC}`
+    /// 2. The second pattern returned is used to match questions
+    ///    and is extracted from between the `${q}` tags.
+    /// 3. The third pattern returned is used to match answers
+    ///    and is extracted from between the `${a}` tags.
+    /// 4. `${HEADER}`, `${QUESTION}` and `${ANSWER}` are interpolated
+    ///    with `.+`
+    /// 5. `${MAGIC}` is interpolated with the *Magic Marker*
+    /// 6. All interpolated patterns are returned
+    let carveMoldMelt magicMarker mold =
+        (parseRegex @"[\s\S]+?\$\{MAGIC\}" mold |> List.head) +
+        @"[\s\S]+\$\{MAGIC\}" + (splitRegex @"\$\{MAGIC\}" mold |> List.last),
+        parseRegex @"\$\{q\}[\s\S]+\$\{q\}" mold |> List.head,
+        parseRegex @"\$\{a\}[\s\S]+\$\{a\}" mold |> List.head

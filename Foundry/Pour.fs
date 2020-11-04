@@ -11,8 +11,8 @@ open Mold
 /// </summary>
 module Pour =
 
-    let pourText (mold: Mold) (outputPath: string) =
+    let pourText mold (outputPath: string) =
         ()
 
-    let pourBinary (mold: Mold) (outputPath: string) =
+    let pourBinary mold (outputPath: string) =
         ()
