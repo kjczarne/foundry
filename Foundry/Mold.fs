@@ -101,6 +101,8 @@ ${MAGIC}
 
 
     /// <summary>
+    /// This function 
+    /// 
     /// Example, default Markdown spec:
     /// ```fsharp
     /// """
@@ -125,7 +127,8 @@ ${MAGIC}
     ///    with `.+`
     /// 5. `${MAGIC}` is interpolated with the *Magic Marker*
     /// 6. All interpolated patterns are returned
-    let carveMoldMelt magicMarker mold =
+    /// </summary>
+    let carveMoldMelt mold =
         (parseRegex @"[\s\S]+?\$\{MAGIC\}" mold |> List.head) +
         @"[\s\S]+\$\{MAGIC\}" + (splitRegex @"\$\{MAGIC\}" mold |> List.last),
         parseRegex @"\$\{q\}[\s\S]+\$\{q\}" mold |> List.head,
