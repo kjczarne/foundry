@@ -3,6 +3,7 @@ namespace Foundry.Tests
 open NUnit.Framework
 open Foundry.Melt
 open Foundry.Mold
+open Foundry.Config
 
 [<TestFixture>]
 type MeltTest () =
@@ -90,7 +91,7 @@ type MeltTest () =
                             Fields = ["Wer ist sie"; "Sie ist ich."; "Sie isst mich."]
                             TreeCategories = []
                             Tags = [] } ] } ]
-        let (actual: List<Batch>) = melt defaultMarkdownMold mdToParse
+        let (actual: List<Batch>) = melt defaultConfig defaultMarkdownMold mdToParse
         Assert.That(actual, Is.EqualTo(expected))
 
     /// <summary>
