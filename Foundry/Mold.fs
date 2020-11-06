@@ -129,7 +129,7 @@ ${MAGIC}
     /// 6. All interpolated patterns are returned
     /// </summary>
     let carveMoldMelt mold =
-        (parseRegex @"[\s\S]+?\$\{MAGIC\}" mold |> List.head) +
-        @"[\s\S]+\$\{MAGIC\}" + (splitRegex @"\$\{MAGIC\}" mold |> List.last),
-        parseRegex @"\$\{q\}[\s\S]+\$\{q\}" mold |> List.head,
-        parseRegex @"\$\{a\}[\s\S]+\$\{a\}" mold |> List.head
+        (parseRegex @"[\s\S]+?\$\{MAGIC\}" mold |> Seq.head) +
+        @"[\s\S]+\$\{MAGIC\}" + (splitRegex @"\$\{MAGIC\}" mold |> Seq.last),
+        parseRegex @"\$\{q\}[\s\S]+\$\{q\}" mold |> Seq.head,
+        parseRegex @"\$\{a\}[\s\S]+\$\{a\}" mold |> Seq.head

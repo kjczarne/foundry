@@ -20,7 +20,7 @@ module Regex =
     /// </param>
     /// </summary>
     let parseRegex regex str =
-        [for m in Regex(regex).Matches(str) do m.Value]
+        seq { for m in Regex(regex).Matches(str) do m.Value }
 
     /// <summary>
     /// Replaces all occurences of a matched
@@ -44,7 +44,7 @@ module Regex =
     /// </param>
     /// </summary>
     let splitRegex regex str =
-        Regex.Split(str, regex) |> Array.toList
+        Regex.Split(str, regex) |> Array.toSeq
 
     /// <summary>
     /// Deprecated.
@@ -57,4 +57,4 @@ module Regex =
     /// </summary>
     let splitOnMagic str =
         let s = splitRegex @"\$\{MAGIC\}" str
-        s |> List.head, s |> List.item 1, s |> List.item 2
+        s |> Seq.head, s |> Seq.item 1, s |> Seq.item 2
