@@ -25,7 +25,7 @@ module App =
 
 ⚗️   
 """
-        Mold.carveMoldMelt "⚗️" defaultMarkdownMold
+        carveMoldMelt defaultMarkdownMold
         |> printfn "%A"
 
         interpolateMarkers (regexMoldInterpolationMap "⚗️") defaultMarkdownMold
