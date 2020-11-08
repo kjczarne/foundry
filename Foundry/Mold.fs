@@ -43,6 +43,24 @@ ${a}
 ${MAGIC}
 """
 
+    let defaultMultilevelMarkdownMold = """
+# ${HEADER} ${MAGIC}
+
+${t}
+## ${TREE1}
+${t}
+
+${t}
+### ${TREE2}
+${t}
+
+${q}-${QUESTION}${q} 
+${a}
+    ${ANSWER}
+${a}
+${MAGIC} 
+"""
+
 
     /// <summary>
     /// Default Regex interpolation map for the
@@ -59,7 +77,8 @@ ${MAGIC}
         Map( seq { @"\$\{MAGIC\}", magicMarker
                    @"\$\{HEADER\}", @"(.+)"
                    @"\$\{QUESTION\}", @"(.+)"
-                   @"\$\{ANSWER\}", @"(.+)" } )
+                   @"\$\{ANSWER\}", @"(.+)" 
+                   @"\$\{TREE\d+\}", @"(.+)" } )
 
 
     /// <summary>
@@ -108,28 +127,37 @@ ${MAGIC}
     /// """
     /// # ${HEADER} ${MAGIC}
     /// 
+    /// ${t}
+    /// ## ${TREE1}
+    /// ${t}
+    /// 
+    /// ${t}
+    /// ### ${TREE2}
+    /// ${t}
+    /// 
     /// ${q}-${QUESTION}${q} 
     /// ${a}
     ///     ${ANSWER}
     /// ${a}
-    /// ${MAGIC}
+    /// ${MAGIC} 
     /// """
     /// ```
     /// The pipeline acts as follows:
     /// 1. The first pattern to be returned is a pattern
     ///    that matches a complete batch, i.e.
     ///    `${HEADER}${MAGIC}[\s\S]+${MAGIC}`
+    /// 2. The second pattern matches tree hierarchy elements
+    ///    within a single batch: `\$\{t\}[\s\S]+?\$\{t\}`
+    ///    and trims them to a matching pattern
     /// 2. The second pattern returned is used to match questions
     ///    and is extracted from between the `${q}` tags.
     /// 3. The third pattern returned is used to match answers
     ///    and is extracted from between the `${a}` tags.
-    /// 4. `${HEADER}`, `${QUESTION}` and `${ANSWER}` are interpolated
-    ///    with `.+`
-    /// 5. `${MAGIC}` is interpolated with the *Magic Marker*
-    /// 6. All interpolated patterns are returned
     /// </summary>
     let carveMoldMelt mold =
-        (parseRegex @"[\s\S]+?\$\{MAGIC\}" mold |> Seq.head) +
-        @"[\s\S]+\$\{MAGIC\}" + (splitRegex @"\$\{MAGIC\}" mold |> Seq.last),
-        parseRegex @"\$\{q\}[\s\S]+\$\{q\}" mold |> Seq.head,
-        parseRegex @"\$\{a\}[\s\S]+\$\{a\}" mold |> Seq.head
+        seq { (parseRegex @"[\s\S]+?\$\{MAGIC\}" mold |> Seq.head) 
+               + @"[\s\S]+\$\{MAGIC\}" 
+               + (splitRegex @"\$\{MAGIC\}" mold |> Seq.last) }
+            |> Seq.append <| parseRegex @"\$\{t\}[\s\S]+?\$\{t\}" mold
+            |> Seq.append <| seq { parseRegex @"\$\{q\}[\s\S]+\$\{q\}" mold |> Seq.head
+                                   parseRegex @"\$\{a\}[\s\S]+\$\{a\}" mold |> Seq.head }

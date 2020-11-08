@@ -56,6 +56,24 @@ type MeltTest () =
     Sie isst mich.
 
 ⚗️
+
+# Arbitrarily deep ⚗️
+
+## Multiple levels
+
+### Of parsing
+
+- Sounds fun
+
+    Undoubtedly
+
+### Another batch
+
+- Should be
+
+    Melted separately
+
+⚗️
 """
 
     /// <summary>
@@ -90,8 +108,17 @@ type MeltTest () =
                           { Id = ""
                             Fields = ["Wer ist sie"; "Sie ist ich."; "Sie isst mich."]
                             TreeCategories = []
+                            Tags = [] } ] } 
+            { Id = "Arbitrarily deep"
+              Records = [ { Id = ""
+                            Fields = ["Sounds fun"; "Undoubtedly"]
+                            TreeCategories = ["Multiple levels"; "Of parsing"]
+                            Tags = [] }
+                          { Id = ""
+                            Fields = ["Should be"; "Melted separately"]
+                            TreeCategories = ["Multiple levels"; "Another batch"]
                             Tags = [] } ] } ]
-        let (actual: List<Batch>) = melt defaultConfig defaultMarkdownMold mdToParse
+        let (actual: List<Batch>) = melt (meltingPatterns defaultConfig defaultMarkdownMold) mdToParse []
         Assert.That(actual, Is.EqualTo(expected))
 
     /// <summary>
