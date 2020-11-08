@@ -80,6 +80,15 @@ ${MAGIC}
                    @"\$\{ANSWER\}", @"(.+)" 
                    @"\$\{TREE\d+\}", @"(.+)" } )
 
+    /// <summary>
+    /// Replaces `${t}`, `${q}` and `${a}` tags with
+    /// an empty string.
+    /// <param name="s">String template with the tags
+    /// to be stripped away</param>
+    /// <returns>String, same template but without
+    /// the enclosing tags</returns>
+    /// </summary>
+    let cleanUpEnclosingTags s = replaceRegex @"\$\{[tqa]\}" "" s
 
     /// <summary>
     /// Recursively interpolates markers with values
@@ -115,12 +124,12 @@ ${MAGIC}
             | Some s -> s
         let repl = replaceRegex k v str
         match markerMap.Count with
-        | 0 -> repl
+        | 0 -> repl |> cleanUpEnclosingTags
         | _ -> interpolateMarkers (Map.remove k markerMap) repl
 
 
     /// <summary>
-    /// This function 
+    /// This function prepares melting Regex patterns.
     /// 
     /// Example, default Markdown spec:
     /// ```fsharp
@@ -153,11 +162,23 @@ ${MAGIC}
     ///    and is extracted from between the `${q}` tags.
     /// 3. The third pattern returned is used to match answers
     ///    and is extracted from between the `${a}` tags.
+    /// <param name="mold">A string *Mold* adherent
+    /// to the specification</param>
+    /// <returns>`string * string seq * string * string`
+    /// The tuple constists of regex patterns used in
+    /// the `melt` function:
+    /// 1. Pattern matching the *Magic-Marker*-demarcated
+    ///    batches.
+    /// 2. Sequence of patterns that matches tree hierarchy
+    ///    above a record.
+    /// 3. Pattern matching questions.
+    /// 4. Pattern matching answers.
+    /// </returns>
     /// </summary>
     let carveMoldMelt mold =
-        seq { (parseRegex @"[\s\S]+?\$\{MAGIC\}" mold |> Seq.head) 
-               + @"[\s\S]+\$\{MAGIC\}" 
-               + (splitRegex @"\$\{MAGIC\}" mold |> Seq.last) }
-            |> Seq.append <| parseRegex @"\$\{t\}[\s\S]+?\$\{t\}" mold
-            |> Seq.append <| seq { parseRegex @"\$\{q\}[\s\S]+\$\{q\}" mold |> Seq.head
-                                   parseRegex @"\$\{a\}[\s\S]+\$\{a\}" mold |> Seq.head }
+        (parseRegex @"[\s\S]+?\$\{MAGIC\}" mold |> Seq.head) 
+            + @"[\s\S]+\$\{MAGIC\}" 
+            + (splitRegex @"\$\{MAGIC\}" mold |> Seq.last) |> cleanUpEnclosingTags,
+        parseRegex @"\$\{t\}[\s\S]+?\$\{t\}" mold |> Seq.map cleanUpEnclosingTags,
+        parseRegex @"\$\{q\}[\s\S]+\$\{q\}" mold |> Seq.head |> cleanUpEnclosingTags,
+        parseRegex @"\$\{a\}[\s\S]+\$\{a\}" mold |> Seq.head |> cleanUpEnclosingTags
