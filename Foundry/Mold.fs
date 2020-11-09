@@ -25,6 +25,14 @@ open Regex
 /// some of the programs used by the users may use a particular
 /// way of formatting a Markdown document on export, so a flexible
 /// spec is needed to be translate both from and into a given format.
+/// 
+/// Also remember that the mold specifications should be written
+/// precisely, *to the tee*, that is e.g. introducing a space
+/// after the final marker will mean that the application
+/// will always try to match that space. In such case
+/// batches that don't have that trailing space,
+/// won't be detected. This is a mistake that we made
+/// ourselves initially.
 /// </summary>
 module Mold =
 
@@ -43,22 +51,25 @@ ${a}
 ${MAGIC}
 """
 
+    /// <summary>
+    /// Default Markdown Mold that takes
+    /// into account two possible steps in
+    /// the tree hierarchy.
+    /// </summary>
     let defaultMultilevelMarkdownMold = """
 # ${HEADER} ${MAGIC}
 
-${t}
-## ${TREE1}
-${t}
+${t1}## ${TREE1}
 
-${t}
-### ${TREE2}
-${t}
+${t2}### ${TREE2}
+
 
 ${q}-${QUESTION}${q} 
 ${a}
     ${ANSWER}
 ${a}
-${MAGIC} 
+${t2}${t1}
+${MAGIC}
 """
 
 
@@ -88,7 +99,7 @@ ${MAGIC}
     /// <returns>String, same template but without
     /// the enclosing tags</returns>
     /// </summary>
-    let cleanUpEnclosingTags s = replaceRegex @"\$\{[tqa]\}" "" s
+    let cleanUpEnclosingTags s = replaceRegex @"\$\{([qar]|t\d)\}" "" s
 
     /// <summary>
     /// Recursively interpolates markers with values
@@ -127,6 +138,30 @@ ${MAGIC}
         | 0 -> repl |> cleanUpEnclosingTags
         | _ -> interpolateMarkers (Map.remove k markerMap) repl
 
+    /// <summary>
+    /// This function finds `${t}` tags
+    /// and assesses how many tree levels
+    /// should be expected from the mold.
+    /// <param name="mold">String *Mold*</param>
+    /// <returns>Integer count of tree levels</returns>
+    /// </summary>
+    let treeMarkerCount mold = 
+        parseRegex @"\$\{t\d\}" mold
+        |> Seq.collect (parseRegex @"\d")
+        |> Seq.distinct
+        |> Seq.length
+
+    /// <summary>
+    /// This function returns a list of Regex patterns
+    /// that match increasing levels of the hierarchy tree
+    /// in a *Mold*
+    /// <param name="mold">*Mold* string</param>
+    /// <returns>List of string Regex patterns
+    /// matching increasing tree levels</returns>
+    /// </summary>
+    let treeMarkerPatterns mold =
+        [for i in 1..(treeMarkerCount mold) do 
+            @"\$\{t" + i.ToString() + @"\}[\s\S]+?\$\{t" + i.ToString() + @"\}"]
 
     /// <summary>
     /// This function prepares melting Regex patterns.
@@ -136,19 +171,16 @@ ${MAGIC}
     /// """
     /// # ${HEADER} ${MAGIC}
     /// 
-    /// ${t}
-    /// ## ${TREE1}
-    /// ${t}
+    /// ${t1}## ${TREE1}
     /// 
-    /// ${t}
-    /// ### ${TREE2}
-    /// ${t}
+    /// ${t2}### ${TREE2}
     /// 
-    /// ${q}-${QUESTION}${q} 
+    /// ${r}${q}-${QUESTION}${q} 
     /// ${a}
     ///     ${ANSWER}
-    /// ${a}
-    /// ${MAGIC} 
+    /// ${a}${r}
+    /// ${t2}${t1}
+    /// ${MAGIC}
     /// """
     /// ```
     /// The pipeline acts as follows:
@@ -176,9 +208,10 @@ ${MAGIC}
     /// </returns>
     /// </summary>
     let carveMoldMelt mold =
+        
         (parseRegex @"[\s\S]+?\$\{MAGIC\}" mold |> Seq.head) 
-            + @"[\s\S]+\$\{MAGIC\}" 
+            + @"[\s\S]+?${MAGIC}" 
             + (splitRegex @"\$\{MAGIC\}" mold |> Seq.last) |> cleanUpEnclosingTags,
-        parseRegex @"\$\{t\}[\s\S]+?\$\{t\}" mold |> Seq.map cleanUpEnclosingTags,
+        treeMarkerPatterns mold,
         parseRegex @"\$\{q\}[\s\S]+\$\{q\}" mold |> Seq.head |> cleanUpEnclosingTags,
         parseRegex @"\$\{a\}[\s\S]+\$\{a\}" mold |> Seq.head |> cleanUpEnclosingTags
