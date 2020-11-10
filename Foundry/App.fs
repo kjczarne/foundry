@@ -9,29 +9,38 @@ module App =
     let main args =
         printfn "%s" "hello world!"
         let str = """
-# Ich bin ⚗️
+# Arbitrarily deep ⚗️
 
-- Wer bist du
+## Multiple levels
 
-    Ich bin ich.
+### Of parsing
 
-    Ich bin der Teufel.
+- Sounds fun
 
-- Wer ist sie
+    Undoubtedly
 
-    Sie ist ich.
+### Another batch
 
-    Sie isst mich.
+- Should be
 
-⚗️   
+    Melted separately
+
+⚗️
 """
-        carveMoldMelt defaultMarkdownMold
+        // let simplerMeltingPatterns =
+        //     [ @"\w";  ]
+    
+        carveMoldMelt defaultMultilevelMarkdownMold
         |> printfn "%A"
 
-        interpolateMarkers (regexMoldInterpolationMap "⚗️") defaultMarkdownMold
+        // interpolateMarkers (regexMoldInterpolationMap "⚗️") defaultMultilevelMarkdownMold
+        // |> printfn "%A"
+
+        // let k, v = Map.toSeq (regexMoldInterpolationMap "⚗️") |> Seq.item 0
+        // replaceRegex k v defaultMultilevelMarkdownMold
+        // |> printfn "%A"
+
+        Melt.melt (Melt.meltingPatterns Config.defaultConfig defaultMultilevelMarkdownMold) str []
         |> printfn "%A"
 
-        let k, v = Map.toSeq (regexMoldInterpolationMap "⚗️") |> Seq.item 0
-        replaceRegex k v defaultMarkdownMold
-        |> printfn "%A"
         0
