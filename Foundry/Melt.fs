@@ -40,7 +40,7 @@ module Melt =
     /// <summary>
     /// This function takes in a `Config` object
     /// and a *Mold* string as arguments and produces
-    /// a Sequence of 3 patterns that will be used
+    /// a tuple of patterns that will be used
     /// at each respective step of the parsing tree
     /// traversal.
     /// <param name="config">A `Config` object</param>
@@ -62,13 +62,27 @@ module Melt =
                                         (regexMoldInterpolationMap config.MagicMarker) 
                                         template
         carveMoldMelt mold 
-        |> fun (i, j, k, l) -> interpolator i, 
-                               Seq.map interpolator j, 
-                               interpolator k, 
-                               interpolator l
+        |> fun (i, j, k, l) -> seq { seq { interpolator i }
+                                     (Seq.map interpolator j)
+                                     seq { interpolator k
+                                           interpolator l } } |> Seq.concat
 
-    // TODO: implement melt with recursive tree parsing
-    // let rec melt patterns resource (accumulator: Batch list) =
-    //     match patterns with
-    //     | p :: ps -> 
-    //     | [] -> 
+    // /// <summary>
+    // /// Melts recursively traversing only one edge of the tree.
+    // /// </summary>
+    // let rec preMelt (patterns : seq<string>) (resource : string) =
+        
+
+
+    // TODO: try FParsec with full Markdown Spec
+    let rec melt (patterns : seq<string>) resource accumulator =
+        let p =
+            match Seq.tryHead patterns with
+            | None -> ""
+            | Some p -> p
+        let m = 
+            parseRegex p resource |> Seq.toList
+        let updatedAcc = Seq.append m accumulator
+        match Seq.length m with
+        | 0 -> updatedAcc
+        | _ -> melt (Seq.tail patterns) (Seq.last updatedAcc) updatedAcc
