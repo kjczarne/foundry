@@ -15,8 +15,9 @@
     <Compile Include="Config.fs" />
     <Compile Include="Regex.fs" />
     <Compile Include="Mold.fs" />
-    <Compile Include="MdParser.fs" />
     <Compile Include="Melt.fs" />
+    <Compile Include="MdParser.fs" />
+    <Compile Include="MdMaker.fs" />
     <Compile Include="Pour.fs" />
     <Compile Include="Cast.fs" /> 
     <Compile Include="App.fs" />
