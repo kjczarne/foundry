@@ -2,14 +2,15 @@ namespace Foundry
 
 open Regex
 open Mold
+open FParsec
 
 module App =
 
     [<EntryPoint>]
     let main args =
         printfn "%s" "hello world!"
-        let str = """
-# Arbitrarily deep ⚗️
+        let str = """⚗️
+# Arbitrarily deep 
 
 ## Multiple levels
 
@@ -30,8 +31,8 @@ module App =
         // let simplerMeltingPatterns =
         //     [ @"\w";  ]
     
-        carveMoldMelt defaultMultilevelMarkdownMold
-        |> printfn "%A"
+        // carveMoldMelt defaultMultilevelMarkdownMold
+        // |> printfn "%A"
 
         // interpolateMarkers (regexMoldInterpolationMap "⚗️") defaultMultilevelMarkdownMold
         // |> printfn "%A"
@@ -40,7 +41,16 @@ module App =
         // replaceRegex k v defaultMultilevelMarkdownMold
         // |> printfn "%A"
 
-        Melt.melt (Melt.meltingPatterns Config.defaultConfig defaultMultilevelMarkdownMold) str []
-        |> printfn "%A"
+        // Melt.melt (Melt.meltingPatterns Config.defaultConfig defaultMultilevelMarkdownMold) str []
+        // |> printfn "%A"
+
+        let testParse p str =
+            match run p str with
+            | Success(result, _, _)   -> printfn "Success: %A" result
+            | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
+
+        testParse MdParser.parseFoundrySnippet str |> printfn "%A"
+
+        Cast.cast Cast.example |> printfn "%A"
 
         0

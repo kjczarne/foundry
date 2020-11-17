@@ -6,6 +6,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="FParsec" Version="1.1.1" />
     <PackageReference Include="FSharp.Core" Version="4.7.1" />
     <PackageReference Update="FSharp.Core" Version="4.7.1" /> <!-- workaround for VSMac bug https://github.com/mono/monodevelop/pull/5137 --> 
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
@@ -14,6 +15,7 @@
     <Compile Include="Config.fs" />
     <Compile Include="Regex.fs" />
     <Compile Include="Mold.fs" />
+    <Compile Include="MdParser.fs" />
     <Compile Include="Melt.fs" />
     <Compile Include="Pour.fs" />
     <Compile Include="Cast.fs" /> 

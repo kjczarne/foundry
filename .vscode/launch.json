@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Foundry/bin/Debug/netcoreapp3.1/Foundry.dll",
+            "program": "${workspaceFolder}/Foundry/bin/Debug/net5/Foundry.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,

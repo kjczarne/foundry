@@ -33,10 +33,6 @@ module Melt =
           TreeCategories : string list
           Tags : string list }
 
-    type Batch =
-        { Id : string
-          Records : List<Record> }
-
     /// <summary>
     /// This function takes in a `Config` object
     /// and a *Mold* string as arguments and produces
@@ -71,8 +67,6 @@ module Melt =
     // /// Melts recursively traversing only one edge of the tree.
     // /// </summary>
     // let rec preMelt (patterns : seq<string>) (resource : string) =
-        
-
 
     // TODO: try FParsec with full Markdown Spec
     let rec melt (patterns : seq<string>) resource accumulator =
