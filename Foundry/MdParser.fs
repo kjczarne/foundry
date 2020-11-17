@@ -1,27 +1,34 @@
 namespace Foundry
 
 open FParsec
+open Mold
 
 module MdParser =
     type UserState = unit
     type Parser<'t> = Parser<'t, UserState>
 
-    let parseMagic : Parser<_> = pstring "⚗️"
-    let doubleNewline : Parser<_> = newline .>> newline
-    let parseAllUntilNewline pPreceding = pPreceding >>. manyCharsTill anyChar doubleNewline
-    let parseHeadingSymbols : Parser<_> = many1 (pstring "#") >>. (pstring " ")
-    let parseAnyHeading : Parser<_> = parseHeadingSymbols |> parseAllUntilNewline
+    let (doubleNewline : Parser<_>) = newline .>> newline
+    let pUntilDoubleNewline pPreceding = pPreceding >>. manyCharsTill anyChar doubleNewline
 
-    let parseQuestion : Parser<_> = pstring "- " |> parseAllUntilNewline
-    let parseAnswer : Parser<_> = pstring "    " |> parseAllUntilNewline
+    let pHeading = choice [
+        pstring "###### " |> pUntilDoubleNewline |>> Heading6
+        pstring "##### " |> pUntilDoubleNewline |>> Heading5
+        pstring "#### " |> pUntilDoubleNewline |>> Heading4
+        pstring "### " |> pUntilDoubleNewline |>> Heading3
+        pstring "## " |> pUntilDoubleNewline |>> Heading2
+        pstring "# " |> pUntilDoubleNewline |>> Heading1 ]
 
-    let parseRecord : Parser<_> = parseQuestion .>>. (many1 parseAnswer)
+    let pQuestion = pstring "- " |> pUntilDoubleNewline |>> Question
+    let pAnswer = pstring "    " |> pUntilDoubleNewline |>> Answer
 
-    let parseRecordWithHeading : Parser<_> = parseAnyHeading .>>. parseRecord
-    let parseRecordWithOneOrMoreHeading = many1 parseAnyHeading .>>. parseRecord
-        
-    let parseRecordsWithOneOrMoreHeading = many1 parseAnyHeading .>>. (many1 parseRecord)
+    let pRecord = pQuestion .>>. many1 pAnswer |>> Record
 
-    let parseManyRecords = many1 parseRecordsWithOneOrMoreHeading
-        
-    let parseFoundrySnippet = skipManyTill anyChar (parseMagic .>> newline) >>. parseManyRecords
+    let pRecords = many1 pRecord
+
+    let pBranch = manyTill pHeading (lookAhead pRecords) .>>. pRecords |>> Branch
+
+    let pTree = many1 pBranch |>> Tree
+
+    let pMagic = pstring "⚗️"
+    
+    let pP = pMagic >>. newline >>. pTree .>> pMagic
