@@ -17,6 +17,14 @@ module Pour =
 
     let pourBinary mold (outputPath: string) =
         ()
+    
+
+    // FIXME: we're losing information about the header level right now!!
+    //        probably the parser will need to be context-aware to know how many #'s it witnessed
+    //        unless we limit the grammar up to 6 marks
+    //
+    //        we will not guarantee accurracy if user wants to have two disjoint
+    //        trees within one snippet, that should be discouraged
 
     /// <summary>
     /// Describes the expected raw output from a parser, where the
@@ -42,22 +50,3 @@ module Pour =
     let example =[(["Arbitrarily deep "; "Multiple levels"; "Of parsing"],
                    [("Sounds fun", ["Undoubtedly"])]);
                   (["Another batch"], [("Should be", ["Melted separately"])])]
-
-    /// <summary>
-    /// Takes in a `ParserRawOutput` and spews out
-    /// a `seq<Record>`.
-    /// <param name="parsingOutput">`ParserRawOutput`, whatever
-    /// is returned from the melting funtions that conforms
-    /// to this type </param>
-    /// </summary>
-    let pour (parsingOutput : ParserRawOutput) =
-        seq { for tree in parsingOutput do
-              let categories, records = tree
-              for record in records do
-                  let question, answers = record
-                  let questionList = [ question ]
-                  let r = { TreeCategories = categories 
-                            Id = ""
-                            Tags = [ ]
-                            Fields = (List.append questionList answers) }
-                  yield r}
