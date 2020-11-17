@@ -49,8 +49,8 @@ module App =
             | Success(result, _, _)   -> printfn "Success: %A" result
             | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
 
-        testParse MdParser.parseFoundrySnippet str |> printfn "%A"
+        testParse MdParser.pP str |> printfn "%A"
 
-        Pour.pour Pour.example |> printfn "%A"
+        // Pour.pour Pour.example |> printfn "%A"
 
         0
