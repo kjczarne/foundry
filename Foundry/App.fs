@@ -51,6 +51,6 @@ module App =
 
         testParse MdParser.parseFoundrySnippet str |> printfn "%A"
 
-        Cast.cast Cast.example |> printfn "%A"
+        Pour.pour Pour.example |> printfn "%A"
 
         0
