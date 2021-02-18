@@ -14,10 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Mold.Test.fs" />
-    <Compile Include="Melt.Test.fs" />
-    <Compile Include="Pour.Test.fs" />
-    <Compile Include="Cast.Test.fs" />
+    <Compile Include="Utilities.fs" />
+    <Compile Include="Parse.Test.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

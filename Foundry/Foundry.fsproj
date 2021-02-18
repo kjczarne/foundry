@@ -12,14 +12,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model.fs" />
     <Compile Include="Config.fs" />
-    <Compile Include="Regex.fs" />
-    <Compile Include="Mold.fs" />
-    <Compile Include="Melt.fs" />
-    <Compile Include="MdParser.fs" />
-    <Compile Include="MdMaker.fs" />
-    <Compile Include="Pour.fs" />
-    <Compile Include="Cast.fs" /> 
+    <Compile Include="Parse.fs" />
     <Compile Include="App.fs" />
     
   </ItemGroup>
