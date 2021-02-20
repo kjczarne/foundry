@@ -56,7 +56,7 @@ FINISH"""
             A (Answer "42")
             A (Answer "69")
             E (End "FINISH") ]
-        let actual = test (pParseQualifier "\r\n" simplestTemplate) exSimplest
+        let actual = test (pUserInput "\r\n" simplestTemplate) exSimplest
         Assert.True(
             List.map2 (( = )) actual expected
             |> List.reduce (( && ))
@@ -86,7 +86,7 @@ FINISH"""
             Q (Question "What is the meaning of life?")
             A (Answer "42")
             A (Answer "69") ]
-        let actual = test (pParseQualifier "\r\n" exMdTemplate) exMd
+        let actual = test (pUserInput "\r\n" exMdTemplate) exMd
         Assert.True(
             List.map2 (( = )) actual expected
             |> List.reduce (( && ))

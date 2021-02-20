@@ -105,7 +105,7 @@ let processTemplate pSeparator template =
 let combinators pSeparator template = 
     processTemplate pSeparator template |> Map.ofSeq
 
-let pParseQualifier pSeparator template =
+let pUserInput pSeparator template =
     ((combinators pSeparator template) 
     |> Map.toSeq 
     |> Seq.map (fun (i, j) -> j))
