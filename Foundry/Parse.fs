@@ -34,26 +34,23 @@ let pMarkers = choice [
     attempt pEndMarker'
 ]
 
-let pTupleMarker pSeparator pMarker tCast tCast2 = 
+let pStringBeforeMarker pSeparator pMarker tCast tCast2 = 
     (((noneOf <| (fst markerBrackets + snd markerBrackets)) 
         |> many1Chars) |>> tCast |>> tCast2) .>> pMarker .>> opt (regex pSeparator)
     <|> pMarker .>> opt (regex pSeparator)
 
-let pTupleBeginMarker pSeparator = pTupleMarker pSeparator pBeginMarker' Begin B
-let pTupleEndMarker pSeparator = pTupleMarker pSeparator pEndMarker' End E
-let pTupleTitleMarker pSeparator = pTupleMarker pSeparator pTitleMarker' Title T
-let pTupleQuestionMarker pSeparator = pTupleMarker pSeparator pQuestionMarker' Question Q
-let pTupleAnswerMarker pSeparator = pTupleMarker pSeparator pAnswerMarker' Answer A
+let pBeforeBeginMarker pSeparator = pStringBeforeMarker pSeparator pBeginMarker' Begin B
+let pBeforeEndMarker pSeparator = pStringBeforeMarker pSeparator pEndMarker' End E
+let pBeforeTitleMarker pSeparator = pStringBeforeMarker pSeparator pTitleMarker' Title T
+let pBeforeQuestionMarker pSeparator = pStringBeforeMarker pSeparator pQuestionMarker' Question Q
+let pBeforeAnswerMarker pSeparator = pStringBeforeMarker pSeparator pAnswerMarker' Answer A
 
 let pFull pSeparator = (many1 <| choice [
-    attempt <| pTupleBeginMarker pSeparator
-    attempt <| pTupleTitleMarker pSeparator
-    attempt <| pTupleQuestionMarker pSeparator
-    attempt <| pTupleAnswerMarker pSeparator
-    attempt <| pTupleEndMarker pSeparator
-    // attempt <| (newline <|> doubleNewline) >>% N
-    // attempt <| pSeparator >>% N
-    // attempt doubleNewline >>. preturn N
+    attempt <| pBeforeBeginMarker pSeparator
+    attempt <| pBeforeTitleMarker pSeparator
+    attempt <| pBeforeQuestionMarker pSeparator
+    attempt <| pBeforeAnswerMarker pSeparator
+    attempt <| pBeforeEndMarker pSeparator
 ])
 
 let tokenize (input : string) =
@@ -104,22 +101,9 @@ let processTemplate pSeparator template =
                 raise (Exception("Invalid pattern matching!")) ]
     | Failure(errorMsg, _, _) -> 
         raise (Exception(errorMsg))
-        // ["pN", preturn N]
 
 let combinators pSeparator template = 
     processTemplate pSeparator template |> Map.ofSeq
-// let combinators : Map<string,Parser<obj,unit>> = 
-//     getTemplateValues () |> Map.ofSeq
-// let pBeginMarker template = (combinators template) |> Map.tryFind "pBeginMarker"
-// let pEndMarker template = (combinators template) |> Map.tryFind "pEndMarker"
-// let pQuestionMarker pSeparator template = (combinators pSeparator template) |> Map.find "pQuestionMarker"
-// let pAnswerMarker pSeparator template = (combinators pSeparator template) |> Map.find "pAnswerMarker"
-// let pTitleMarker pSeparator template = (combinators pSeparator template) |> Map.find "pTitleMarker"
-// let pBegin pSeparator template = (combinators pSeparator template) |> Map.find "pBegin"
-// let pEnd pSeparator template = (combinators pSeparator template) |> Map.find "pEnd"
-let pQuestion pSeparator template = (combinators pSeparator template) |> Map.find "pQuestion"
-let pAnswer pSeparator template = (combinators pSeparator template) |> Map.find "pAnswer"
-let pTitle pSeparator template = (combinators pSeparator template) |> Map.find "pTitle"
 
 let pParseQualifier pSeparator template =
     ((combinators pSeparator template) 
@@ -127,16 +111,4 @@ let pParseQualifier pSeparator template =
     |> Seq.map (fun (i, j) -> j))
     |> choice 
     |> many1
-    // many1 <| choice [
-    // //     pBeginMarker template <!> "BM"
-    // //     pEndMarker template <!> "EM"
-    //     // pQuestionMarker pSeparator template <!> "QM"
-    //     // pAnswerMarker pSeparator template <!> "AM"
-    //     // pTitleMarker pSeparator template <!> "TM"
-    //     // pBegin pSeparator template <!> "B"
-    //     // pEnd pSeparator template <!> "E"
-    //     pTitle pSeparator template //<!> "T"
-    //     pQuestion pSeparator template //<!> "Q"
-    //     pAnswer pSeparator template //<!> "A"
-        
-    // ]
+
