@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5</TargetFramework>
-
+    <LangVersion>5.0</LangVersion>
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
@@ -16,6 +16,7 @@
   <ItemGroup>
     <Compile Include="Utilities.fs" />
     <Compile Include="Parse.Test.fs" />
+    <Compile Include="Make.Test.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

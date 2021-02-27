@@ -91,3 +91,42 @@ FINISH"""
             List.map2 (( = )) actual expected
             |> List.reduce (( && ))
         )
+    
+    /// <summary>
+    /// Should correctly parse a standard markdown template
+    /// </summary>
+    [<Test>]
+    member this.TestMoreThanOneMarkdown () =
+        let exMdTemplate = 
+            """# {Title}
+
+  - {Question}
+
+    {Answer}"""
+        let exMd = 
+            """# Some title
+
+  - What is the meaning of life?
+
+    42
+
+    69
+
+  - What did you have for dinner?
+
+    Kale
+
+    Spinach"""
+        let expected = [
+            T (Title "Some title")
+            Q (Question "What is the meaning of life?")
+            A (Answer "42")
+            A (Answer "69")
+            Q (Question "What did you have for dinner?")
+            A (Answer "Kale")
+            A (Answer "Spinach") ]
+        let actual = test (pUserInput "\r\n" exMdTemplate) exMd
+        Assert.True(
+            List.map2 (( = )) actual expected
+            |> List.reduce (( && ))
+        )
