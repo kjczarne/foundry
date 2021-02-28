@@ -34,7 +34,7 @@ type ParseTest () =
     /// <summary>
     /// Should parse a simple template correctly
     /// </summary>
-    [<Test>]
+    [<Test; Ignore("There's an apparent bug where e.g. Title is treated as End")>]
     member this.TestSimpleTemplateParse () =
         let simplestTemplate = 
             """{BEGIN:START}
@@ -50,12 +50,12 @@ A: 42
 A: 69
 FINISH"""
         let expected = [
-            BM (BeginM "")
-            E (End "T: My title")
-            E (End "Q: What is the meaning of life?")
+            BM (BeginM "START")
+            T (Title "My title")
+            Q (Question "What is the meaning of life?")
             A (Answer "42")
             A (Answer "69")
-            E (End "FINISH") ]
+            EM (EndM "FINISH") ]
         let actual = test (pUserInput "\r\n" simplestTemplate) exSimplest
         Assert.True(
             List.map2 (( = )) actual expected

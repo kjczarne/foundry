@@ -112,3 +112,7 @@ let pUserInput pSeparator template =
     |> choice 
     |> many1
 
+let parse pSeparator template input =
+    match run (pUserInput pSeparator template) input with
+    | Success (result, _, _) -> result
+    | Failure (errMsg, _, _) -> raise ( Exception ($"Error occured: {errMsg}") )

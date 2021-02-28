@@ -8,6 +8,7 @@ let make separator parsedList outputTemplate =
     let templateTree = match run (pFull separator) outputTemplate with
                        | Success(result, _, _) -> result
                        | Failure(errorMessage, _, _) -> raise (Exception($"The template {outputTemplate} could not be parsed"))
+
     let walk func expr =
         match expr with
         | T s ->  match s with
@@ -16,9 +17,22 @@ let make separator parsedList outputTemplate =
                   | TitleM s2 -> func s2
         | Q s ->  match s with
                   | Question s2 -> func s2
+        | QM s -> match s with
+                  | QuestionM s2 -> func s2
         | A s ->  match s with
                   | Answer s2 -> func s2
-        | _ -> raise (Exception("not supported yet"))
+        | AM s -> match s with
+                  | AnswerM s2 -> func s2
+        | B s ->  match s with
+                  | Begin s2 -> func s2
+        | BM s -> match s with
+                  | BeginM s2 -> func s2
+        | E s ->  match s with
+                  | End s2 -> func s2
+        | EM s -> match s with
+                  | EndM s2 -> func s2
+        | Model.Error s ->  raise ( Exception(s) )
+        | N -> func ""
 
     let extractStr = walk id
     let prependFromTemplate prependToken =
