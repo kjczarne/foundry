@@ -4,8 +4,3 @@ Input: |
     - {Question}
 
       {Answer}
-# TODO: remove the output template and constrain output types to a few predefined types
-#       with the option of writing your own converter and plugging it into the system. Python??
-Output: |
-  {Title}
-  {Question},{Answer}

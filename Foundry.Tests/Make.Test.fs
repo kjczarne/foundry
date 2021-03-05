@@ -25,5 +25,5 @@ type MakeTest () =
         let expected = 
             """Some title,What is the meaning of life?,42,69"""
         let outputTemplate = """{Title},{Question},{Answer}"""
-        let actual = Make.make "\r\n" parsedList outputTemplate
+        let actual = Make.makeCustom "\r\n" parsedList outputTemplate
         Assert.That(actual, Is.EqualTo(expected))

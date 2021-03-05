@@ -10,13 +10,19 @@ let Defaults = {|
 
 type Config = {
     Input: string
-    Output: string
+    Output: string option
 }
+
+type SupportedOutputTypes =
+    | Csv
+    | Json
+    | Custom
 
 type Args =
     | [<AltCommandLine("-c")>] Config of string
     | [<AltCommandLine("-i")>] Input of string
     | [<AltCommandLine("-o")>] Output of string
+    | [<AltCommandLine("-t")>] Output_Type of SupportedOutputTypes
 
     interface IArgParserTemplate with
         member s.Usage = 
@@ -24,6 +30,7 @@ type Args =
             | Config _ -> "Path to the configuration file"
             | Input _ -> "Path to the input file/directory"
             | Output _ -> "Path to the output file/directory"
+            | Output_Type _ -> "Output type"
 
 [<EntryPoint>]
 let main argv =
@@ -46,9 +53,29 @@ let main argv =
         | Some s -> File.ReadAllText(s)
         | None -> raise ( Exception ("Provide an input file to transform!") )
 
-    let parsed = Parse.parse "\r\n" configObject.Input inputFileContents
+    let parsed = Parse.parse "\r\n" 
 
-    let made = Make.make "\r\n" parsed configObject.Output
+    let outputType = 
+        match args.TryGetResult Output_Type with
+        | Some s ->
+            match s with
+            | Csv -> Make.Csv
+            | Json -> Make.Json
+            | Custom ->
+                match configObject.Output with
+                | Some template -> Make.Custom template
+                | None -> raise ( Exception(
+                                    "Custom adapter requires " +
+                                    "an `Output` template in " +
+                                    "the config file" ) )
+        | None -> raise ( Exception ( "Please provide an output type." ) )
+    
+    let made = Make.make outputType configObject.Input inputFileContents
+
+    let outputPath =
+        match args.TryGetResult Output with
+        | Some path -> File.WriteAllText(path, made)
+        | None -> raise ( Exception ( "Please provide output path." ) )
 
     printfn "%A" made
     0

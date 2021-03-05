@@ -3,8 +3,9 @@ open Model
 open FParsec
 open Parse
 open System
+open Newtonsoft.Json
 
-let make separator parsedList outputTemplate =
+let makeCustom separator parsedList outputTemplate =
     let templateTree = match run (pFull separator) outputTemplate with
                        | Success(result, _, _) -> result
                        | Failure(errorMessage, _, _) -> raise (Exception($"The template {outputTemplate} could not be parsed"))
@@ -47,3 +48,19 @@ let make separator parsedList outputTemplate =
         | None -> extractStr i
     String.Join("", [ for i in parsedList do
                       prepend i ])
+
+type Outputs =
+    | Csv
+    | Custom of string
+    | Json
+
+let csv = """{Title}
+{Question},{Answer}"""
+
+let make ouptutType inputTemplate inputFileContents =
+    let parsedList = parse "\r\n" inputTemplate inputFileContents
+
+    match ouptutType with
+    | Custom s -> makeCustom "\r\n" parsedList s
+    | Csv -> makeCustom "\r\n" parsedList csv
+    | Json -> JsonConvert.SerializeObject(parsedList, Formatting.Indented)
